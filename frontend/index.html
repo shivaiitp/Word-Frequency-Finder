@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Frequency Finder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Circular loader style */
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #1D4ED8;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Spin animation for circular loader */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Center the loader and text vertically and horizontally */
+        .center-loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 py-8 px-4">
+    <div class="max-w-xl mx-auto bg-white p-6 rounded shadow-lg">
+        <h1 class="text-2xl font-bold mb-4">Most frequent N words finder</h1>
+
+        <!-- Input field for URL -->
+        <div class="mb-4">
+            <label for="url" class="block text-sm font-medium text-gray-700">Enter URL</label>
+            <input type="text" id="url" class="w-full mt-1 px-4 py-2 border rounded-md" placeholder="e.g: https://example.com" required>
+        </div>
+
+        <!-- Input field for the number of top words to fetch -->
+        <div class="mb-4">
+            <label for="n" class="block text-sm font-medium text-gray-700">Top N Words</label>
+            <input type="number" id="n" class="w-full mt-1 px-4 py-2 border rounded-md" placeholder="e.g: 10">
+        </div>
+
+        <!-- Button to trigger word fetching -->
+        <button onclick="fetchTopWords()" class="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Get Words</button>
+
+        <!-- Loader element to show while the request is being processed -->
+        <div id="loader" class="mt-4 hidden text-center center-loader">
+            <div class="loader"></div>
+            <span id="loadingText">Loading<span id="ellipsis">.</span></span>
+        </div>
+
+        <!-- Table to display the result (word and frequency) -->
+        <table id="resultTable" class="mt-4 w-full hidden table-auto">
+            <thead>
+                <tr>
+                    <th class="px-4 py-2 border">Word</th>
+                    <th class="px-4 py-2 border">Frequency</th>
+                </tr>
+            </thead>
+            <tbody id="resultTableBody"></tbody>
+        </table>
+
+        <!-- Copyright line -->
+        <div class="text-center mt-4 text-sm text-gray-600">
+            &copy; 2024 All rights reserved. Developed by <a href="https://www.linkedin.com/in/shiva-singh-421152167/" class="hover:underline hover:text-blue-700" target="_blank">Shiva Singh</a>
+        </div>
+    </div>
+
+    <script>
+        // Function to fetch the top N words from the provided URL
+        async function fetchTopWords() {
+            const url = document.getElementById('url').value;
+            const n = document.getElementById('n').value || 10;
+            const loader = document.getElementById('loader');
+            const resultTable = document.getElementById('resultTable');
+            const ellipsis = document.getElementById('ellipsis');
+
+            // Show loader while waiting for the API response
+            loader.classList.remove('hidden');
+            resultTable.classList.add('hidden');
+
+            let dotsCount = 1;
+            const interval = setInterval(() => {
+                dotsCount = (dotsCount % 3) + 1;
+                ellipsis.textContent = '.'.repeat(dotsCount);
+            }, 500);
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/words', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, n: parseInt(n) })
+                });
+                const data = await response.json();
+                clearInterval(interval);  // Clear animation interval
+
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    displayResults(data);
+                }
+            } catch (error) {
+                alert('An error occurred: ' + error.message);
+            } finally {
+                // Always hide loader and show result table on completion
+                loader.classList.add('hidden');
+                resultTable.classList.remove('hidden');
+                clearInterval(interval);  // Ensure the interval is cleared
+            }
+        }
+
+        // Function to display the fetched word frequency data in a table
+        function displayResults(data) {
+            const tableBody = document.getElementById('resultTableBody');
+            tableBody.innerHTML = '';
+
+            // Convert the dictionary to an array and sort by frequency in descending order
+            const sortedData = Object.entries(data).sort((a, b) => b[1] - a[1]);
+
+            // Populate the table
+            sortedData.forEach(([word, frequency]) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td class="px-4 py-2 border">${word}</td><td class="px-4 py-2 border">${frequency}</td>`;
+                tableBody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+
+</html>
