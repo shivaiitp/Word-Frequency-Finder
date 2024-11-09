@@ -82,4 +82,4 @@ pip install flask flask-cors selenium webdriver-manager beautifulsoup4
 
 ## License
 
-This project is licensed under the MIT License.
+This project is made by Shiva Singh
