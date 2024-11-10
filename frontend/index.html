@@ -137,6 +137,19 @@
                 tableBody.appendChild(row);
             });
         }
+
+        // Add event listeners to URL and N inputs to detect "Enter" key press
+        document.getElementById('url').addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                fetchTopWords();
+            }
+        });
+
+        document.getElementById('n').addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                fetchTopWords();
+            }
+        });
     </script>
 </body>
 
